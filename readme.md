@@ -1,51 +1,24 @@
-If you use this template for research, please [cite it](template_reference.bib):
-> Kedron, P., & Holler, J. (2023). Template for Reproducible and Replicable Research in Human-Environment and Geographical Sciences. https://doi.org/10.17605/OSF.IO/W29MQ
-
-# Title of Study
+# Covid 19 Clustering and Effects on Disabled Communities in August, 2020
 
 ## Contributors
 
-- First Name Last Name\*, email address, @githubname, ORCID link, affiliated institution(s)
-- First Name Last Name, email address, @githubname, ORCID link, affiliated institution(s)
-
-\* Corresponding author and creator
+- Lucas Nerbonne, lnerbonne@middlebury.edu, Middlebury College Earth and Climate Sciences Department
 
 ## Abstract
 
-Write a brief abstract about your research project.
-If the project is a reproduction or replication study, include the full citation with a statement
-This study is a *reproduction/replication* of:
-
-> citation to prior study
-
-A graphical abstract of the study could also be included as an image here.
+This is a attempted partial reproduction study of J. Chakraborty's 2021 study 'Social inequities in the distribution of COVID-19: An intra-categorical analysis of people with disabilities in the U.S.'. In it, I'll first copy Chakraborty's workflow extracting the covid incidence rate for different disability demographic groups, assessing the correlation between county-level case incidence and the population of these demographics. Then we'll deviate from Chakraborty's work by clustering county-level cases using kulldorf spatial filtering to generate case clusters to get a better idea of the spatial organization of disease spread at this point in the pandemic. 
 
 ## Study Metadata
 
-- `Key words`: Comma-separated list of keywords (tags) for searchability. Geographers often use one or two keywords each for: theory, geographic context, and methods.
-- `Subject`: select from the [BePress Taxonomy](http://digitalcommons.bepress.com/cgi/viewcontent.cgi?article=1008&context=reference)
-- `Date created`: date when project was started
-- `Date modified`: date of most recent revision
-- `Spatial Coverage`: Specify the geographic extent of your study. This may be a place name and link to a feature in a gazetteer like GeoNames or OpenStreetMap, or a well known text (WKT) representation of a bounding box.
-- `Spatial Resolution`: Specify the spatial resolution as a scale factor, description of the level of detail of each unit of observation (including administrative level of administrative areas), and/or or distance of a raster GRID size
-- `Spatial Reference System`: Specify the geographic or projected coordinate system for the study
-- `Temporal Coverage`: Specify the temporal extent of your study---i.e. the range of time represented by the data observations.
-- `Temporal Resolution`: Specify the temporal resolution of your study---i.e. the duration of time for which each observation represents or the revisit period for repeated observations
-- `Funding Name`: name of funding for the project
-- `Funding Title`: title of project grant
-- `Award info URI`: web address for award information
-- `Award number`: award number
-
-## Related to
-
-- `OSF Project`:
-- `Pre-analysis Registration`:
-- `Post-analysis Report Registration`:
-- `Preprint`:
-- `Conference Presentation`:
-- `Publication`:
-- `Prior Study`:
-- `...`:
+- `Key words`: Covid19, Epidemiology, Disease Spread, Disabled Populations, Mobility
+- `Subject`: Epidemiology, Demographic Research
+- `Date created`: 2025-03-5
+- `Date modified`: 2020-03-5
+- `Spatial Coverage`: United States (Country)
+- `Spatial Resolution`: Counties
+- `Spatial Reference System`: EPSG:4269 NAD 1983 Geographic Coordinate System
+- `Temporal Coverage`: August 2020
+- `Temporal Resolution`: County-Level Incidence Rate, Averaged from Weekly Data
 
 ## Metadata for access
 
