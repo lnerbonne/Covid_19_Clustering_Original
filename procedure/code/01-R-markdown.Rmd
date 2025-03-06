@@ -125,25 +125,18 @@ Secondary data sources for the study are to include ... .
 
 Each of the next subsections describes one data source.
 
-### Primary data source1 name
+### US CENSUS American Community Survey
 
-- `Title`: Title of data source
-- `Abstract`: Brief description of the data source
-- `Spatial Coverage`: Specify the geographic extent of your study. This may be a place name and link to a feature in a gazetteer like GeoNames or OpenStreetMap, or a well known text (WKT) representation of a bounding box.
+- `Title`: County Level Poverty and Disability Data, Derived from 2014-2018 American Community Survey 5-year Estimates
+- `Abstract`: This dataset documents poverty and disability data on the county level. The US Census Bureau collects the data in order to produces information on social, economic, housing, and demographic characteristics about the nation's population every year, which provides an important tool for communities to use and see how they are changing. 
+- `Spatial Coverage`: United States, OSM [link](https://www.openstreetmap.org/relation/148838#map=3/36.46/-80.16)
 - `Spatial Resolution`: Specify the spatial resolution as a scale factor, description of the level of detail of each unit of observation (including administrative level of administrative areas), and/or or distance of a raster GRID size
 - `Spatial Representation Type`: Specify the model of spatial data representation, e.g. one of `vector`, `grid`, `textTable`, `tin` (triangulated irregular network), etc. If the type is `vector`, also specify the geometry type as in the OGC Simple Feature Access standard (https://www.ogc.org/publications/standard/sfa/) , e.g. `POINT`, `LINESTRING`, `MULTIPOLYGON`, etc. 
 - `Spatial Reference System`: Specify the geographic or projected coordinate system for the study
-- `Temporal Coverage`: Specify the temporal extent of your study---i.e. the range of time represented by the data observations.
-- `Temporal Resolution`: Specify the temporal resolution of your study---i.e. the duration of time for which each observation represents or the revisit period for repeated observations
-- `Lineage`: Describe and/or cite data sources and/or methodological steps planned to create this data source.
-  - sampling scheme, including spatial sampling
-  - target sample size and method for determining sample size
-  - stopping criteria for data collection and sampling (e.g. sample size, time elapsed)
-  - de-identification / anonymization
-  - experimental manipulation
-- `Distribution`: Describe who will make the data available and how?
-- `Constraints`: Legal constraints for *access* or *use* to protect *privacy* or *intellectual property rights*
-- `Data Quality`: State any planned quality assessment
+- `Temporal Coverage`: 2014-2018
+- `Lineage`: We computed the summary statistics, including the min, max, mean, and standard deviation. We processed the data after retrieving it by excluding states that irrelevant to our study area. We also checked for data duplication and omission: we found one county with missing disability and poverty data, for which we replaced the missing data with zeros.
+- `Distribution`: The data is avalible for download from the US Census
+- `Constraints`: The US Census Data is open access in the public domain. 
 - `Variables`: For each variable, enter the following information. If you have two or more variables per data source, you may want to present this information in table form (shown below)
   - `Label`: variable name as used in the data or code
   - `Alias`: intuitive natural language name
@@ -159,102 +152,81 @@ Each of the next subsections describes one data source.
 | variable1 | ... | ... | ... | ... | ... | ... | ... |
 | variable2 | ... | ... | ... | ... | ... | ... | ... |
 
-### Primary data source2 name
+### JHU Covid Case Dashboard
 
-... same form as above...  
-Metadata documents in the markdown `.md` format can be included directly with the `includeMarkdown()` function.
-This requires the `markdown` package.
-
-### Secondary data source1 name
-
-- `Title`: Title of data source
-- `Abstract`: Brief description of the data source
-- `Spatial Coverage`: Specify the geographic extent of your study. This may be a place name and link to a feature in a gazetteer like GeoNames or OpenStreetMap, or a well known text (WKT) representation of a bounding box.
-- `Spatial Resolution`: Specify the spatial resolution as a scale factor, description of the level of detail of each unit of observation (including administrative level of administrative areas), and/or or distance of a raster GRID size
-- `Spatial Reference System`: Specify the geographic or projected coordinate system for the study
-- `Temporal Coverage`: Specify the temporal extent of your study---i.e. the range of time represented by the data observations.
-- `Temporal Resolution`: Specify the temporal resolution of your study---i.e. the duration of time for which each observation represents or the revisit period for repeated observations
-- `Lineage`: Describe and/or cite data sources and/or methodological steps used to create this data source
-- `Distribution`: Describe how the data is distributed, including any persistent identifier (e.g. DOI) or URL for data access
-- `Constraints`: Legal constraints for *access* or *use* to protect *privacy* or *intellectual property rights*
-- `Data Quality`: State result of quality assessment or state "Quality unknown"
+- `Title`: County Level COVID-19 Incidence Rate
+- `Abstract`: This is the data repository for the 2019 Novel Coronavirus Visual Dashboard operated by the Johns Hopkins University Center for Systems Science and Engineering (JHU CSSE)
+- `Spatial Coverage`: United States, OSM [link](https://www.openstreetmap.org/relation/148838#map=3/36.46/-80.16)
+- `Spatial Resolution`: Counties
+- `Spatial Representation Type`: Vector Polygon
+- `Spatial Reference System`: Mercator
+- `Temporal Coverage`: 1/22/20-8-1-20
+- `Temporal Resolution`: N/A
+- `Lineage`: The dataset is provided by Chakraborty and preprocessed in the RStudio for analysis. 
+We selected columns that are relevant to our analysis. They are POP_ESTIMA and Confirmed, which we then renamed to pop and cases respectively.
+We calculated the COVID rate by dividing cases with the total population. 
+Finally, we dropped the geometry of the dataset.
+- `Distribution`: The data is publically avalible from the JHU website.
+- `Constraints`: The data is open access under the Creative Commons Attribution 4.0 International (CC BY 4.0) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020
 - `Variables`: For each variable, enter the following information. If you have two or more variables per data source, you may want to present this information in table form (shown below)
   - `Label`: variable name as used in the data or code
   - `Alias`: intuitive natural language name
   - `Definition`: Short description or definition of the variable. Include measurement units in description.
   - `Type`: data type, e.g. character string, integer, real
   - `Accuracy`: e.g. uncertainty of measurements
-  - `Domain`: Range (Maximum and Minimum) of numerical data, or codes or categories of nominal data, or reference to a standard codebook
+  - `Domain`: Expected range of Maximum and Minimum of numerical data, or codes or categories of nominal data, or reference to a standard codebook
   - `Missing Data Value(s)`: Values used to represent missing data and frequency of missing data observations
-  - `Missing Data Frequency`: Frequency of missing data observations
+  - `Missing Data Frequency`: Frequency of missing data observations: not yet known for data to be collected
 
 | Label | Alias | Definition | Type | Accuracy | Domain | Missing Data Value(s) | Missing Data Frequency |
 | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
 | variable1 | ... | ... | ... | ... | ... | ... | ... |
 | variable2 | ... | ... | ... | ... | ... | ... | ... |
 
-### Secondary data source2 name
-
-... same form as above...
-
 ## Prior observations  
 
-Prior experience with the study area, prior data collection, or prior observation of the data can compromise the validity of a study, e.g. through p-hacking.
-Therefore, disclose any prior experience or observations at the time of study pre-registration here, with example text below:
-
-At the time of this study pre-registration, the authors had _____ prior knowledge of the geography of the study region with regards to the ____ phenomena to be studied.
-This study is related to ____ prior studies by the authors
+At the time of this study pre-registration, the authors had prior knowledge of the geography of the study region with regards to the geographic, population, and historical disease spread phenomena to be studied.
 
 For each primary data source, declare the extent to which authors had already engaged with the data:
 
-- [ ] no data collection has started
+- [X] no data collection has started
 - [ ] pilot test data has been collected
 - [ ] data collection is in progress and data has not been observed
 - [ ] data collection is in progress and __% of data has been observed
 - [ ] data collection is complete and data has been observed. Explain how authors have already manipulated / explored the data.
 
-For each secondary source, declare the extent to which authors had already engaged with the data:
-
-- [ ] data is not available yet
-- [ ] data is available, but only metadata has been observed
-- [ ] metadata and descriptive statistics have been observed
-- [ ] metadata and a pilot test subset or sample of the full dataset have been observed
-- [ ] the full dataset has been observed. Explain how authors have already manipulated / explored the data.
-
-If pilot test data has been collected or acquired, describe how the researchers observed and analyzed the pilot test, and the extent to which the pilot test influenced the research design.
-
 ## Bias and threats to validity
 
-Given the research design and primary data to be collected and/or secondary data to be used, discuss common threats to validity and the approach to mitigating those threats, with an emphasis on geographic threats to validity.
+Extensive knowledge of the physical and social geography of the United States might mean that some conclusions drawn will be influenced by prior knowlege of movement patterns ect. 
+Additionally, lived experience throughout the course of the pandemic may bias interpretation of patterns in the data. 
 
-These include:
-  - uneven primary data collection due to geographic inaccessibility or other constraints
-  - multiple hypothesis testing
-  - edge or boundary effects
-  - the modifiable areal unit problem
-  - nonstationarity
-  - spatial dependence or autocorrelation
-  - temporal dependence or autocorrelation
-  - spatial scale dependency
-  - spatial anisotropies
-  - confusion of spatial and a-spatial causation
-  - ecological fallacy
-  - uncertainty e.g. from spatial disaggregation, anonymization, differential privacy
+From a data side, reporting and testing of cases was notoriously inconsistent across municipalities, states, and regions. 
+This means that some counties will likely be incorrectly reported, and that inconsistencies are often correlated (a whole state de-emphasizing testing, resulting in low case counting)
 
 ## Data transformations
 
-Describe all data transformations planned to prepare data sources for analysis.
-This section should explain with the fullest detail possible how to transform data from the **raw** state at the time of acquisition or observation, to the pre-processed **derived** state ready for the main analysis.
-Including steps to check and mitigate sources of **bias** and **threats to validity**.
-The method may anticipate **contingencies**, e.g. tests for normality and alternative decisions to make based on the results of the test.
-More specifically, all the **geographic** and **variable** transformations required to prepare input data as described in the data and variables section above to match the study's spatio-temporal characteristics as described in the study metadata and study design sections.
-Visual workflow diagrams may help communicate the methodology in this section.
+### JHU Covid Cases
+To explore the JHU incidence rates, I'll calculate the incidence rate per 100,000 and map it, looking to duplicate Chakraborty's mapped figure. 
+  (product)- Map of Covid 19 incidence rate nationwide. 
+### ACS
 
-Examples of **geographic** transformations include coordinate system transformations, aggregation, disaggregation, spatial interpolation, distance calculations, zonal statistics, etc.
+Aquire data from the ACS- specifically acs_vars_S1810 for disability data and acs5_c18130 for poverty data. 
+Use Mutate to create a population percentage with disabilities by dividing the number of reported disabilities by total population that there exists a disability deisgnation for.
+This specifically is NOT the total population, as the total number of disability vs. no disability answers is less than the total population of counties. 
+  (product)- Map of PWD rates nationwide
 
-Examples of **variable** transformations include standardization, normalization, constructed variables, imputation, classification, etc.
+I will use corr() to determine the correlation between covid cases and pct disability, running for each disability subgroup. 
+P values will then be created for each correlation using the following formulas (as per statistics), assigning them to their respective columns with mutate.
 
-Be sure to include any steps planned to **exclude** observations with *missing* or *outlier* data, to **group** observations by *attribute* or *geographic* criteria, or to **impute** missing data or apply spatial or temporal **interpolation**.
+t= abs(r)/sqrt((1-r^2)/(df))
+p= pt(t, df, lower.tail = FALSE)
+
+This correlation and significance value is the final product for my reproduction of the initial phase of Chakraborty's disability correlation work in this paper. The final table should match the corresponding table in his manuscript.
+
+
+
+
+
 
 ## Analysis
 
