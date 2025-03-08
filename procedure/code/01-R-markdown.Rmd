@@ -208,12 +208,16 @@ This means that some counties will likely be incorrectly reported, and that inco
 ### JHU Covid Cases
 To explore the JHU incidence rates, I'll calculate the incidence rate per 100,000 and map it, looking to duplicate Chakraborty's mapped figure. 
   (product)- Map of Covid 19 incidence rate nationwide. 
-### ACS
 
+### ACS
 Aquire data from the ACS- specifically acs_vars_S1810 for disability data and acs5_c18130 for poverty data. 
 Use Mutate to create a population percentage with disabilities by dividing the number of reported disabilities by total population that there exists a disability deisgnation for.
 This specifically is NOT the total population, as the total number of disability vs. no disability answers is less than the total population of counties. 
   (product)- Map of PWD rates nationwide
+
+## Analysis
+
+### Statistical Correlation of Disability Rates and Covid Incidence
 
 I will use corr() to determine the correlation between covid cases and pct disability, running for each disability subgroup. 
 P values will then be created for each correlation using the following formulas (as per statistics), assigning them to their respective columns with mutate.
@@ -223,16 +227,25 @@ p= pt(t, df, lower.tail = FALSE)
 
 This correlation and significance value is the final product for my reproduction of the initial phase of Chakraborty's disability correlation work in this paper. The final table should match the corresponding table in his manuscript.
 
+### Clustering Analysis
 
+For the second section of the methods, I'll attempt to create a map of clusters of counties that have high covid incidence rates. 
+This is somewhat of a reproduction of Chakraborty's work in that he used county clusters as an input into generalized estimating equations attempting to account for spatial autocorrelation in his disability analysis. 
+To delineate his high-incidence clusters Chakraborty used SATScan, a spatio-temporal statistical software that was developed for the monitoring of diseases. 
+While potentially effective in this case, the selection of SATSCAN as the tool to account for spatial correlation is likely a product of Chakraborty's epidemiology background.
+To attempt to mimic his results using R, I will use a kulldorff filter in the SpatialEpi R package. 
 
+To generate clusters, Spatial Epi will use relative risk (comparing local incidence to global incidence rates) to determine areas of relatively higher risk. SpatialEpi will then be used to group counties that have a similarly high risk profile.
+The package will return the primary clusters and it's best estimation of any secondary clusters, if they exist. 
+To assess the effectivness of this method, I will map clusters to determine if they are accuratly modeling the perceived clustering of high risk counties. 
 
+The SpatialEpi output will produce clusters but doesn't automatically assign them a unique identifier; to do this, I'll concatonate the state name with their relative risk score (a RR of 1 in New York will become NY1).
+This approach works in this situation because SpatialEpi will group counties within the same state and with the same risk level into one cluster. 
 
+I'll check the result of this concatonation by checking to make sure each cluster is assigned a unique identifier.
 
-## Analysis
+From these clusters I'll be able to map the assessed clusters qualatativly. This map should match Chakraborty's clustering data that he inputted to his GEEs. 
 
-Describe the methods of analysis that will directly test the hypotheses or provide results to answer the research questions.
-This section should explicitly define any spatial / statistical *models* and their *parameters*, including *grouping* criteria, *weighting* criteria, and *significance thresholds*.
-Also explain any follow-up analyses or validations.
 
 # Results
 
