@@ -1,1 +1,6 @@
 path,name,metadata,description
+data/raw/public/poverty_raw.csv,Poverty data,data/metadata/ACSDT5Y2020.C18130_metadata.csv,Poverty data by county from the ACS
+data/raw/public/disability_raw.csv,Disability data,data/metadata/ACSST5Y2020.S1810_metadata.csv,Disability data by county from the ACS
+data/raw/public/covidcase080120.gpkg,Covid data with county geometry attached,data/metadata/Covid_JHU.md,JHU COVID dashboard data from August 1st 2020
+data/raw/public/covidcase080120.csv,Covid data,data/metadata/Covid_JHU.md,JHU COVID dashboard data from August 1st, 2020
+data/raw/public/chakraborty,Chakraborty Data,N/A,Reference data to compare results to from original study
