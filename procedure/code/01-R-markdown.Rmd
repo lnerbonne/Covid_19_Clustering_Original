@@ -19,7 +19,7 @@ In it, I'll first copy Chakraborty's workflow extracting the covid incidence rat
 Then we'll deviate from Chakraborty's work by clustering county-level cases using kulldorf spatial filtering to generate case clusters to get a better idea of the spatial organization of disease spread at this point in the pandemic. 
 
 Chakraborty, J. 2021. Social inequities in the distribution of COVID-19: An intra-categorical analysis of people with disabilities in the U.S. *Disability and Health Journal* **14**:1-5. DOI:[10.1016/j.dhjo.2020.101007](https://doi.org/10.1016/j.dhjo.2020.101007)
-> citation to prior study
+
 
 # Study metadata
 
@@ -116,14 +116,10 @@ knitr::opts_chunk$set(
 
 ## Data and variables
 
-Describe the **data sources** and **variables** to be used.
-Data sources may include plans for observing and recording **primary data** or descriptions of **secondary data**.
-For secondary data sources with numerous variables, the analysis plan authors may focus on documenting only the variables intended for use in the study.
-
-Primary data sources for the study are to include ... .
-Secondary data sources for the study are to include ... .
-
-Each of the next subsections describes one data source.
+All variables in this study were derived from secondary data.
+There are no experimentally manipulated variables in this experiment.
+Eighteen independent variables, a percentage of total disabled persons per county and seventeen 'disaggregated' categories that break down socio-demographic characteristics of the disabled population.
+COVID-19 incidence rate can be seen as the dependent variables.
 
 ### US CENSUS American Community Survey
 
@@ -137,20 +133,36 @@ Each of the next subsections describes one data source.
 - `Lineage`: We computed the summary statistics, including the min, max, mean, and standard deviation. We processed the data after retrieving it by excluding states that irrelevant to our study area. We also checked for data duplication and omission: we found one county with missing disability and poverty data, for which we replaced the missing data with zeros.
 - `Distribution`: The data is avalible for download from the US Census
 - `Constraints`: The US Census Data is open access in the public domain. 
-- `Variables`: For each variable, enter the following information. If you have two or more variables per data source, you may want to present this information in table form (shown below)
-  - `Label`: variable name as used in the data or code
-  - `Alias`: intuitive natural language name
-  - `Definition`: Short description or definition of the variable. Include measurement units in description.
-  - `Type`: data type, e.g. character string, integer, real
-  - `Accuracy`: e.g. uncertainty of measurements
-  - `Domain`: Expected range of Maximum and Minimum of numerical data, or codes or categories of nominal data, or reference to a standard codebook
-  - `Missing Data Value(s)`: Values used to represent missing data and frequency of missing data observations
-  - `Missing Data Frequency`: Frequency of missing data observations: not yet known for data to be collected
 
-| Label | Alias | Definition | Type | Accuracy | Domain | Missing Data Value(s) | Missing Data Frequency |
-| :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
-| variable1 | ... | ... | ... | ... | ... | ... | ... |
-| variable2 | ... | ... | ... | ... | ... | ... | ... |
+The variables in question are as follows: 
+
+Variable Name in Study | ACS Variable name
+--- | ---
+percent of total civilian non-institutionalized population with a disability | S1810_C03_001E
+**Race** |
+percent w disability: White alone | S1810_C03_004E
+percent w disability: Black alone | S1810_C0 3_005E
+percent w disability: Native American | S1810_C03_006E
+percent w disability: Asian alone | S1810_C03_007E
+percent w disability: Other race | S1810_C03_009E
+**Ethnicity** |
+percent w disability: Non-Hispanic White | S1810_C03_0011E
+percent w disability: Hispanic | S1810_C03_012E
+percent w disability: Non-Hispanic non-White | (S1810_C02_001E - S1810_C02_011E - S1810_C02_012E) / (S1810_C01_001E - S1810_C01_011E - S1810_C01_012E) * 100
+percent w disability: Other race | S1810_C03_009E
+**Poverty** |
+percent w disability: Below poverty level | (C18130_004E + C18130_011E + C18130_018E) / C18130_001E * 100
+percent w disability: Above poverty level | (C18130_005E + C18130_012E + C18130_019E) / C18130_001E * 100
+**Age** |
+percent w disability: 5-17 | S1810_C03_014E
+percent w disability: 18-34 | S1810_C03_015E
+percent w disability: 35-64 | S1810_C03_016E
+percent w disability: 65-74 | S1810_C03_017E
+percent w disability: 75+ | S1810_C03_018E
+**Biological sex** |
+percent w disability: male | S1810_C03_001E
+percent w disability: female | S1810_C03_003E
+
 
 ### JHU Covid Case Dashboard
 
@@ -162,26 +174,13 @@ Each of the next subsections describes one data source.
 - `Spatial Reference System`: Mercator
 - `Temporal Coverage`: 1/22/20-8-1-20
 - `Temporal Resolution`: N/A
-- `Lineage`: The dataset is provided by Chakraborty and preprocessed in the RStudio for analysis. 
-We selected columns that are relevant to our analysis. They are POP_ESTIMA and Confirmed, which we then renamed to pop and cases respectively.
-We calculated the COVID rate by dividing cases with the total population. 
-Finally, we dropped the geometry of the dataset.
+- `Lineage`: The specific dataset used was provided by Chakraborty and was been preprocessed in RStudio for analysis. 
+We selected columns that are relevant to our analysis to simplify the stored data, retaining POP_ESTIMA and Confirmed. These columns were then renamed to `pop` and `cases` respectively.
+We then calculated the COVID rate by dividing cases with the total population. 
+Finally, the geometry of the dataset was dropped. 
 - `Distribution`: The data is publically avalible from the JHU website.
 - `Constraints`: The data is open access under the Creative Commons Attribution 4.0 International (CC BY 4.0) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020
-- `Variables`: For each variable, enter the following information. If you have two or more variables per data source, you may want to present this information in table form (shown below)
-  - `Label`: variable name as used in the data or code
-  - `Alias`: intuitive natural language name
-  - `Definition`: Short description or definition of the variable. Include measurement units in description.
-  - `Type`: data type, e.g. character string, integer, real
-  - `Accuracy`: e.g. uncertainty of measurements
-  - `Domain`: Expected range of Maximum and Minimum of numerical data, or codes or categories of nominal data, or reference to a standard codebook
-  - `Missing Data Value(s)`: Values used to represent missing data and frequency of missing data observations
-  - `Missing Data Frequency`: Frequency of missing data observations: not yet known for data to be collected
 
-| Label | Alias | Definition | Type | Accuracy | Domain | Missing Data Value(s) | Missing Data Frequency |
-| :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
-| variable1 | ... | ... | ... | ... | ... | ... | ... |
-| variable2 | ... | ... | ... | ... | ... | ... | ... |
 
 ## Prior observations  
 
@@ -195,6 +194,7 @@ For each primary data source, declare the extent to which authors had already en
 - [ ] data collection is in progress and __% of data has been observed
 - [ ] data collection is complete and data has been observed. Explain how authors have already manipulated / explored the data.
 
+
 ## Bias and threats to validity
 
 Extensive knowledge of the physical and social geography of the United States might mean that some conclusions drawn will be influenced by prior knowlege of movement patterns ect. 
@@ -203,11 +203,13 @@ Additionally, lived experience throughout the course of the pandemic may bias in
 From a data side, reporting and testing of cases was notoriously inconsistent across municipalities, states, and regions. 
 This means that some counties will likely be incorrectly reported, and that inconsistencies are often correlated (a whole state de-emphasizing testing, resulting in low case counting)
 
+
 ## Data transformations
 
 ### JHU Covid Cases
 To explore the JHU incidence rates, I'll calculate the incidence rate per 100,000 and map it, looking to duplicate Chakraborty's mapped figure. 
   (product)- Map of Covid 19 incidence rate nationwide. 
+
 
 ### ACS
 Aquire data from the ACS- specifically acs_vars_S1810 for disability data and acs5_c18130 for poverty data. 
@@ -215,7 +217,9 @@ Use Mutate to create a population percentage with disabilities by dividing the n
 This specifically is NOT the total population, as the total number of disability vs. no disability answers is less than the total population of counties. 
   (product)- Map of PWD rates nationwide
 
+
 ## Analysis
+
 
 ### Statistical Correlation of Disability Rates and Covid Incidence
 
@@ -226,6 +230,7 @@ t= abs(r)/sqrt((1-r^2)/(df))
 p= pt(t, df, lower.tail = FALSE)
 
 This correlation and significance value is the final product for my reproduction of the initial phase of Chakraborty's disability correlation work in this paper. The final table should match the corresponding table in his manuscript.
+
 
 ### Clustering Analysis
 
@@ -249,24 +254,26 @@ From these clusters I'll be able to map the assessed clusters qualatativly. This
 
 # Results
 
-Describe how results are to be presented.
+Correlation results between disabled populations and COVID incidence will be reported in a table. High-incidence county clusters will be presented visually in map-form. 
+
 
 # Discussion
 
-Describe how the results are to be interpreted *vis a vis* each hypothesis or research question.
+Because this study seeks to both A) Reproduce Chakraborty's work, assessing for validity and B) use our own methodology to recreate clustering done in an external program, analysis will be split into two sections. 
+The first will explore the correlation between disability rate at the county scale and incidence - if there is a realtionship between the disability subcategories and covid incidence like Chakraborty found, we should return significant r values.
+The second section will compare our finished clusters to Chakraborty's before thinking about why any differences might occur, given that we're using a different program to generate our clusters than he did. I'm not expecting that the clusters will turn out exactly the same, so it'll be interesting to intterogate why any differences arise. 
+
 
 # Integrity Statement
 
-Include an integrity statement - The authors of this preregistration state that they completed this preregistration to the best of their knowledge and that no other preregistration exists pertaining to the same hypotheses and research.
-If a prior registration *does* exist, explain the rationale for revising the registration here.
+This is the only preregistration for this study. 
+
 
 # Acknowledgements
 
-- `Funding Name`: name of funding for the project
-- `Funding Title`: title of project grant
-- `Award info URI`: web address for award information
-- `Award number`: award number
-
 This report is based upon the template for Reproducible and Replicable Research in Human-Environment and Geographical Sciences, DOI:[10.17605/OSF.IO/W29MQ](https://doi.org/10.17605/OSF.IO/W29MQ)
 
+
 # References
+
+Chakraborty, J. 2021. Social inequities in the distribution of COVID-19: An intra-categorical analysis of people with disabilities in the U.S. *Disability and Health Journal* **14**:1-5. DOI:[10.1016/j.dhjo.2020.101007](https://doi.org/10.1016/j.dhjo.2020.101007)
