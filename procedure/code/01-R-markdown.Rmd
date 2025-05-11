@@ -14,9 +14,10 @@ bibliography: "../../software.bib"
 
 # Abstract
 
-This is a attempted partial reproduction study of J. Chakraborty's 2021 study 'Social inequities in the distribution of COVID-19: An intra-categorical analysis of people with disabilities in the U.S.'. 
-In it, I'll first copy Chakraborty's workflow extracting the covid incidence rate for different disability demographic groups, assessing the correlation between county-level case incidence and the population of these demographics. 
-Then we'll deviate from Chakraborty's work by clustering county-level cases using kulldorf spatial filtering to generate case clusters to get a better idea of the spatial organization of disease spread at this point in the pandemic. 
+This is a attempted partial reproduction study of J. Chakraborty's 2021 study *'Social inequities in the distribution of COVID-19: An intra-categorical analysis of people with disabilities in the U.S.'*. 
+In it, I'll reproduce Chakraborty's workflow extracting the covid incidence rate for different disability demographic groups, assessing the correlation between county-level case incidence and the population of these demographics. This section of the study uses Covid case data from August 1st, 2020. Because this was so early in the pandemic, spread across space definitely plays a role in case incidence. To account for this Chakraborty creates high incidence clusters as a spatial variable input to Generalized Estimating Equations.
+
+Instead of running GEE's, I'll deviate from Chakraborty's work by clustering county-level cases using kulldorf spatial filtering to generate case clusters and assess spatial scale of Covid spread. This will also serve as a test of the comperability of the spatialepi and SATSCAN implementation of this test, a potentially useful tool for open-source reproductions of epidemiological studies that utilize kulldorff statistics. 
 
 Chakraborty, J. 2021. Social inequities in the distribution of COVID-19: An intra-categorical analysis of people with disabilities in the U.S. *Disability and Health Journal* **14**:1-5. DOI:[10.1016/j.dhjo.2020.101007](https://doi.org/10.1016/j.dhjo.2020.101007)
 
@@ -48,11 +49,11 @@ This work is a partial **reproduction study** to assess the feasibility of repro
 Because the original study is likely unable to be replicated perfectly solely from the avalible manuscript, planned deviations will change the end result of the study. 
 I have two goals for this study: 
 
-1)to assess the correlation between disabled populations and covid 19 incidence rate in the initial pandemic surge and
-2)assess the clustering of case incidence between counties
+1) To assess the correlation between disabled populations and covid 19 incidence rate in the initial pandemic surge, mirroring Chakraborty's methods to ensure validity.
+2) assess the clustering of case incidence between counties, with particular intent to assess the comparability of the spatialepi and SATSCAN implementation of clustering. 
 
 A successful study result will be able to reach similar findings to Chakraborty in relation to the correlation between disability and incidence rate, 
-as well as create county clusters of high covid incidence using kulldorf filtering. 
+as well as create county clusters of high covid incidence using kulldorf filtering to compare to the original SATSCAN output. 
 
 The original study is a **observational** study that seeks to answer the question "is Covid 19 incidence higher in counties that have a higher percentage of disabled population?".
 This research question is ultimately broke into 5 specific hypothesis, investigating whether people with disabilities are effected differently depending on their race, ethnicity, poverty level, age, and biological sex.
@@ -67,7 +68,7 @@ The original study was conducted in ArcGIS and SaTScan software; in this reprodu
 # record all the packages you are using here
 # this includes any calls to library(), require(),
 # and double colons such as here::i_am()
-packages <- c("tidyverse", "here", "sf", "pastecs","kableExtra", "tmap", "SpatialEpi")
+packages <- c("tidyverse", "here", "sf", "pastecs","kableExtra", "tmap", "SpatialEpi", "tidycensus")
 
 # force all conflicts to become errors
 # if you load dplyr and use filter(), R has to guess whether you mean dplyr::filter() or stats::filter()
@@ -163,7 +164,61 @@ percent w disability: 75+ | S1810_C03_018E
 percent w disability: male | S1810_C03_001E
 percent w disability: female | S1810_C03_003E
 
-```{r loading acs data, echo= FALSE}
+```{r calling acs data, echo= FALSE, eval=FALSE}
+#this code was used to pull data- due to long run times it's set to not run automatically. 
+
+acs <- get_acs(
+  geography = "county",
+  table = "S1810",
+  year = 2018,
+  output = "wide",
+  cache_table = TRUE,
+  geometry = TRUE,
+  keep_geo_vars = TRUE
+)
+
+acs <- filter(acs, !STATEFP %in% c("02", "15", "72")) %>%
+  st_transform(5070) %>%
+  st_make_valid()
+
+# Query poverty and disability data
+acs_pov <- get_acs(
+  geography = "county",
+  table = "C18130",
+  year = 2018,
+  output = "wide",
+  cache_table = TRUE
+)
+
+state <- get_acs(
+  geography = "state",
+  year = 2018,
+  variables = c("B01001_001"),
+  geometry = TRUE,
+  keep_geo_vars = TRUE
+)
+# Remove Alaska, Hawaii & Puerto Rico,
+state <- dplyr::filter(state, !STATEFP %in% c("02", "15", "72")) %>%
+  st_transform(5070)
+
+saveRDS(acs, here("data", "raw", "public", "acs.RDS"))
+saveRDS(acs_pov, here("data", "raw", "public", "acs_pov.RDS"))
+saveRDS(state, here("data", "raw", "public", "state.RDS"))
+```
+
+```{r get state, echo=FALSE, warning=FALSE, results= FALSE}
+state <- get_acs(
+  geography = "state",
+  year = 2018,
+  variables = c("B01001_001"),
+  geometry = TRUE,
+  keep_geo_vars = TRUE
+)
+state <- dplyr::filter(state, !STATEFP %in% c("02", "15", "72")) %>%
+  st_transform(5070)
+```
+
+```{r load saved data, echo= FALSE}
 #load disability data
 acs<- read.csv(here("data","raw","public","disability_raw.csv"))
 #load poverty data
@@ -189,7 +244,7 @@ Finally, the geometry of the dataset was dropped.
 - `Distribution`: The data is publically available from the JHU website.
 - `Constraints`: The data is open access under the Creative Commons Attribution 4.0 International (CC BY 4.0) by the Johns Hopkins University on behalf of its Center for Systems Science in Engineering. Copyright Johns Hopkins University 2020
 
-```{r covid read in}
+```{r covid read in, echo=FALSE}
 covid <- st_read(here("data","raw","public","covidcase080120.gpkg"))
 
 covid <- select(covid,
@@ -225,10 +280,9 @@ This means that some counties will likely be incorrectly reported, and that inco
 ## Data transformations
 
 ### ACS
-Aquire data from the ACS- specifically acs_vars_S1810 for disability data and acs5_c18130 for poverty data. 
-Use Mutate to create a population percentage with disabilities by dividing the number of reported disabilities by total population that there exists a disability designation for.
+I will first work with data from the ACS- specifically tables acs_vars_S1810 for disability data and acs5_c18130 for poverty data. Using mutate, I'll be able to create a population percentage with disabilities by dividing the number of reported disabilities by total population that there exists a disability designation for.
+
 This specifically is NOT the total population, as the total number of disability vs. no disability answers is less than the total population of counties. 
-  (product)- Map of PWD rates nationwide
 
 ```{r filter-join-acs}
 # Join poverty data to disability data
@@ -268,11 +322,13 @@ acs_derived <- acs_derived %>%
     county_st = NAME.x,
     contains("pct")
   )
+
 ```
+
 
 #JHU Covid Data 
 
-First, I'll calculate case rate per 100,000 people and divide the JHU covid data with rate data into two products- one with and one without geometry. Having geometry associated with the data  breaks things a few steps down the line, so it's easier to just remove it now. I'll then join the JHU Covid Case Rate data to the ACS data.
+Then, I'll calculate case rate per 100,000 people and divide the JHU covid data with rate data into two products- one with and one without geometry. Having geometry associated with the data breaks things a few steps down the line, so it's easier to just remove it in one of the versions now. I'll then join the JHU Covid Case Rate data to the ACS data.
 
 ```{r}
 covid_mapping <- covid |>
@@ -283,7 +339,7 @@ covid_table <- covid_mapping|>
 ```
 
 
-Here's the resulting map, which should be a match to Chakraborty's Figure 1. I also mapped disability rates by county, something that Chakraborty didn't do but that helps to visualize spatial patterns across counties. 
+Here's the resulting map, which is a match to Chakraborty's Figure 1. Below, I also map disability rates by county which is something that Chakraborty didn't do but that helps to visualize spatial patterns across counties. 
 
 
 ```{r covid case mapping, echo= FALSE}
@@ -294,6 +350,13 @@ tm_polygons(fill= "covid_rate",
     border.alpha = .2,
     lwd = 0.2,
     palette = "matplotlib.oranges",
+  )+
+  tm_shape(state) +
+  tm_borders("grey", lwd = .5) +
+  tm_layout(
+    legend.position = c("left", "bottom"),
+    legend.title.size = 0.8,
+    legend.text.size = 0.5
   )
 
 tm_covid_rates
@@ -304,18 +367,16 @@ Now I'll join the JHU dataset to the ACS data by county-level FIPS code, a uniqu
 
 ```{r join acs to jhu data}
 # Join COVID incidence rate data to acs data
-acs_covid <- acs_derived %>%
-  left_join(covid_mapping, by = "fips")
+acs_covid <- covid_mapping %>%
+  left_join(acs_derived, by = "fips")
 
 # move covid_rate column prior to disability percentages
 acs_covid <- acs_covid %>%
   select(fips, statefp, county, county_st, covid_rate, everything())
 ```
 
-Even though Chakraborty didn't do this, I'll map disability rates to visualize any potential spatial patterns. 
-
-### not sure why this isn't working- investigate. 
 ```{r}
+
 tm_disability_rates <- tm_shape(acs_covid) +
   tm_polygons("dis_pct",
     title = "Percent of People with Disability\n(ACS 2014-2018)",
@@ -323,12 +384,19 @@ tm_disability_rates <- tm_shape(acs_covid) +
     border.alpha = .2,
     lwd = 0.2,
     palette = "Oranges"
+  )+
+  tm_shape(state) +
+  tm_borders("grey", lwd = .5) +
+  tm_layout(
+    legend.position = c("left", "bottom"),
+    legend.title.size = 0.8,
+    legend.text.size = 0.5
   )
 
 tm_disability_rates
 ```
 
-
+It's hard to pick out a discernible correlation/non-correlation from these two maps, so let's dive into the data.
 
 
 ## Analysis
@@ -339,16 +407,18 @@ tm_disability_rates
 **Deviation from plan**
 I will also calculate descriptive statistics for each disability subgroup to match the original study's methodology/results
 
-**Planned deviation for reanalysis**: I also calculated the Shapiro Wilks test for normality.
+**Planned deviation for reanalysis**: I also calculated the Shapiro Wilks test for normality, printed in the table with it's corresponding p value.
 
 ```{r descriptive-statistics}
 acs_covid_stats <- acs_covid %>%
-  select(covid_rate, contains("pct")) |>
-  stat.desc(norm = TRUE)|>
-  round(2)|>
-  t() |>
-  as.data.frame() |>
+  st_drop_geometry() %>%
+  select(covid_rate, contains("pct")) %>%
+  stat.desc(norm = TRUE) %>%
+  round(4) %>%
+  t() %>%
+  as.data.frame() %>%
   select(min, max, mean, SD = std.dev, ShapiroWilk = normtest.W, p = normtest.p)
+
 
 acs_covid_stats %>%
   kable(caption = "Reproduced Descriptive Statistics",
@@ -358,7 +428,7 @@ acs_covid_stats %>%
   kable_styling(full_width = FALSE)
 ```
 
-To ensure consistency with Chakraborty's descriptive statistics I'll subtract his table from mine, with zeros across the board signifying a successful reproduction. `table1` is Chakraborty's table, reconstructed from his published paper. 
+Results from the Shapiro Wilks test indicate strong evidence against normality for the majority of the variables used. This leads us into affirming the results found using the parametric regression with a non-parametric test also. To ensure consistency with Chakraborty's descriptive statistics I'll subtract his summary stats table from mine, with zeros across the board signifying a successful reproduction. `table1` is Chakraborty's table, reconstructed from his published paper. 
 
 
 ```{r compare-descriptive-stats}
@@ -374,7 +444,7 @@ table1 <- read.csv(here("data", "raw", "public", "chakraborty", "table1.csv"))
   kable_styling(full_width = FALSE)
 ```
 
-There's something fishy about some of these columsn- it looks like Chakraborty has rounded Covid cases to the whole person, which means that our reproduction is mostly correct. *apov_pct* is being suspicious, with a concerning high minimum that doesn't match `table1`'s results. Circle back. 
+These columns are JUST off- it looks like potentially Chakraborty has rounded Covid cases to the whole person, which means that our reproduction is mostly correct but will be a tiny bit skewed. *apov_pct* is also being suspicious, with a higher minimum value in my stats that doesn't match `table1`'s results. 
 
 carrying on... 
 
@@ -404,6 +474,9 @@ pearsons_r %>%
   column_spec(2:4, width = "4em") %>%
   kable_styling(full_width = FALSE)
 ```
+
+This looks similar to Chakraborty's final Pearson's table; to compare it, I will find the difference between each table and the significance levels assigned to different variables. 
+
 
 ```{r compare-pearsons-correlation}
 # calculate number of significance stars at p < 0.01 and p < 0.05 levels.
@@ -436,11 +509,11 @@ correlations %>%
   add_header_above(c(" " = 1, "Original" = 2, "Reproduced" = 2, "Difference" = 3))
 ```
 
-This correlation and significance value is the final product for my reproduction of the initial phase of Chakraborty's disability correlation work in this paper. The final table should match the corresponding table in his manuscript, which it does(!) ... mostly. All of the significance values are slightly off from what Chakraborty's original calculation. Not sure what the source of this is, but I have checked through all of the data fairly thoroughly. 
+This correlation and significance value is the final product for my reproduction of the initial phase of Chakraborty's disability correlation work in this paper. The final table should match the corresponding table in his manuscript, which it does ... mostly. All of the significance values are slightly off from what Chakraborty's original calculation, although the levels are all the same with the exception of `pct_18_34`, which went up in significance when I ran the test. Not sure what the source of this is, but I have checked through the workflow thoroughly so could be attributed to our initial case rounding error. 
 
 **deviation from published plan**
 
-Unfortunatly, Chakraborty blew past the assumption of normality that is required for a pearson's correlation test; to adjust for this, I'll conduct a Bivariate nonparametric correlation analysis to ensure the validity of his results. 
+Chakraborty didn't test the assumption of normality that is required for a pearson's correlation test (and the variables are non-normally distributed, as seen in my Shapiro-Wilks test); to adjust for this, I'll conduct a Bivariate nonparametric correlation analysis to ensure the validity of his results. 
 
 ```{r spearmans correlation}
 df <- sum(!is.na(acs_covid$dis_pct)) - 2
@@ -490,7 +563,9 @@ correlations %>%
   add_header_above(c(" " = 1, "Pearson's" = 2, "Spearman's" = 2, "Difference" = 3))
 ```
 
-Significance changes between the two tests, with native_pct and other_pct being reassigned to the ** significance level and pct_18_34 being bumped down to a * significance. 
+Significance changes between the two tests are seen, with native_pct and other_pct being reassigned to the ** significance level and pct_18_34 being bumped down to a * significance. This correlation table, which still shows correlation between various disability and demographic categories and Covid spread, is likely a more correct version of the original study's correlations. 
+
+
 
 ### Clustering Analysis
 
@@ -544,9 +619,7 @@ saveRDS(covid_kulldorff,
 )
 ```
 
-#Update with final clustering result path before I drop the doc
-
-```{r load-Kulldorff}
+```{r load-Kulldorff, echo=FALSE}
 # load pre-calculated Kulldorff results
 # alternatively, modify the file name with an appended date to load a more current set of results
 covid_kulldorff <- readRDS(
@@ -554,8 +627,8 @@ covid_kulldorff <- readRDS(
 )
 ```
 
-```{r report-Kulldorff}
-print("Most likely cluster:", quotse = FALSE)
+```{r report-Kulldorff, echo=FALSE}
+print("Most likely cluster:", quote = FALSE)
 covid_kulldorff$most.likely.cluster
 print(
   paste0(
@@ -573,46 +646,80 @@ I'll first match the FIPS code of each assumed cluster to the FIPS codes of coun
 # list of primary cluster counties
 primary_cluster_fips <- covid_kulldorff$most.likely.cluster$location.IDs.included
 
-# create the data frame
 clusters <- data.frame(
-  row_id = primary_cluster_fips,
-  clusterID = primary_cluster_fips[1],  # Use the first FIPS as cluster ID
-  likelihood = covid_kulldorff$most.likely.cluster$log.likelihood.ratio
-)
-
-# list of secondary clusters
+    fips = covid_table[primary_cluster_fips, "fips"],
+    clusterID = covid_table[primary_cluster_fips[1], "fips"],
+    likelihood = covid_kulldorff$most.likely.cluster$log.likelihood.ratio,
+    stringsAsFactors = FALSE
+  )
+# Get a list of secondary clusters
 secondary <- covid_kulldorff$secondary.clusters
 
-#iterate through the secondary clusters
-for (i in covid_kulldorff$secondary.clusters) {
-  cluster_fips <- i$location.IDs.included
-  new_cluster <- data.frame(
-    row_id = cluster_fips,
-    clusterID = cluster_fips[1],
-    likelihood = i$log.likelihood.ratio
+# similarly add counties in each secondary cluster to the list of clusters
+for (i in secondary) {
+  cluster_locations <- i$location.IDs.included
+  new_clusters <- data.frame(
+    fips = covid_table[cluster_locations, "fips"],
+    clusterID = covid_table[cluster_locations[1], "fips"],
+    likelihood = i$log.likelihood.ratio,
+    stringsAsFactors = FALSE
   )
-  
-  clusters <- rbind(clusters, new_cluster) #append the next cluster to the clusters df
+  clusters <- rbind(clusters, new_clusters)
 }
+
 ```
 
-Mapping the clusters: 
+Joining the cluster data back to the `acs_covid` dataframe
 
 ```{r join-clusterID-to-acs_covid}
-covid_table <- covid_table %>%
-  mutate(row_id = row_number())
 
-clusters_joined <- covid_table %>%
-  left_join(clusters, by = "row_id")
+acs_covid <- acs_covid %>%
+  left_join(clusters, by = "fips") 
+
+acs_covid<-acs_covid|>
+  mutate(isCluster = case_when(
+    clusterID == fips ~ "center of cluster",
+    !is.na(clusterID) ~ "other part of cluster",
+    .default = NA
+  ))
+  
 ```
 
+**Planned deviation for reproduction**: Map the `SpatialEpi` cluster results.
+
+```{r map-clusters}
+acs_covid <- st_as_sf(acs_covid)
+
+tm_spatialepi_clusters <-
+  tm_shape(acs_covid) +
+  tm_polygons(col = "isCluster",
+          palette = "-Oranges",
+          popup.vars = c("fips", "clusterID"),
+          colorNA = "grey",
+          title = "SpatialEpi Kulldorff COVID-19 Clusters",
+          border.col = "white",
+          lwd = 0.2,
+          border.alpha = 0.2) +
+  tm_shape(state) +
+  tm_borders("grey", lwd = .5) +
+  tm_layout(
+    legend.position = c("left", "bottom"),
+    legend.title.size = 0.8,
+    legend.text.size = 0.5
+  )
+
+tm_spatialepi_clusters
+```
+This map shows our extracted covid clusters, with the center county of the cluster in red and the counties within the cluster shown in cream. On first pass, we see a huge cluster in the sounteast centered in the Florida Panhandle, spreading through much of the south. We also see several single-county clusters, especially in the more sparsely populated Midwest and West. These are likely by themselves because the surrounding regions lack the popultaion density to spread Covid effectively. 
+
 I'll now calculate the relative risk, a product of Chakraborty's SATSCAN analysis but not of the SpatialEpi R package. This will need to be grouped by cluster to match the final SatScan output. 
+
 
 ```{r relative-risk}
 total_pop <- sum(acs_covid$pop)
 total_cases <- sum(acs_covid$cases)
 
-clusterzzzz <- clusters_joined %>%
+acs_covid <- acs_covid %>%
   group_by(clusterID) %>%
   mutate(
     rr_cluster = ifelse(is.na(clusterID), NA,
@@ -625,8 +732,7 @@ clusterzzzz <- clusters_joined %>%
   )
 ```
 
-Classify relative risk on a scale from 1 to 6.
-Risk is classified according to this table:
+Relative risk will be classified on a scale from 1 to 6.
 
 | Relative Risk Values | Relative Risk Class |
 |:--------------------:|:-------------------:|
@@ -644,17 +750,10 @@ Counties falling outside of any cluster are assigned a score of 1.
 # class breaks
 breaks <- c(-Inf, 1, 2, 3, 4, 5, Inf)
 
-clusterzzzz <- clusterzzzz %>%
+acs_covid <- acs_covid %>%
   mutate(
     cluster_class = ifelse(is.na(clusterID), 1, cut(rr_cluster, breaks, labels = FALSE)),
     loc_class = cut(rr_loc, breaks, labels = FALSE)
-  )
-
-acs_covid <- acs_covid %>%
-  mutate(fips = as.character(fips)) %>%
-  left_join(
-    clusterzzzz %>% mutate(fips = as.character(fips)),
-    by = "fips"
   )
 ```
 
@@ -662,7 +761,7 @@ acs_covid <- acs_covid %>%
 
 Let's visualize these relative risk scores spatially!
 
-First, map the spatial distribution of local relative risk score classifications.
+First, map the spatial distribution of local relative risk score classifications by county.
 
 ```{r map local relative risk score}
 # count the frequency of counties in each class and create labels
@@ -695,12 +794,9 @@ tm_spatialepi_local_risk_class <- tm_shape(acs_covid) +
     legend.text.size = 0.5
   )
 
-rm(class_freq)
-
 tm_spatialepi_local_risk_class
 ```
-
-Next, map the cluster relative risk scores for comparison.
+Next, I map the cluster relative risk scores for comparison.
 Note that following the original study classification methodology, counties outside of clusters are assigned the lowest risk class of `1`.
 
 ```{r map-cluster-relative-risk-classes}
@@ -739,21 +835,52 @@ rm(class_freq)
 tm_spatialepi_cluster_risk_class
 ```
 
+We can see that the cluster relative risk does a decent job of describing the overall relative risk, with our large southeast cluster capturing a lot of the higher risk across the region. Isolated clusters in the Midwest also capture spatial differences in relative risk, with different risks seen in adjacent cluster. 
 
+To properly compare the SpatialEpi results to the SATSCAN output, we should probably know how many clusters we have. I'm going to count em and calculate the cluster with the largest number of included counties. The original study found 102 unique clusters with between 1 and 255 counties in each cluster. 
 
+```{r make-gee-clusters}
 
+# summarize clustering results
+# summarize clustering results
+cluster_summary <- acs_covid %>%
+  drop_na(clusterID)|>
+  dplyr::filter(cases > 0) %>%
+  st_drop_geometry() %>%
+  count(clusterID)
+cat(
+  length(cluster_summary$n),
+  "unique clusters based on spatialEpi CLUSTER relative risk\n"
+)
+ 
+summary(cluster_summary$n)
+rm(cluster_summary)
+```
 
-
-# Results
-
-Correlation results between disabled populations and COVID incidence will be reported in a table. High-incidence county clusters will be presented visually in map-form. 
-
+We failed to reproduce the SATSCAN output, producing 133 unique clusters with between 1 and 599 counties, many more than the original output. This is a interesting result, potentially pointing to our implementation of the Kulldorf Scan Statistic differing from SATSCANS. One hypothesis is that it is clustering more sensitively to lower levels of risk, as seen in the southeast megacluster (clusterID 12005), centered on Bay County, Florida. At the same time as we see more preferential grouping into clusters, we also see the sheer numbers of clusters increase. This suggests that spatialepi is, in addition to being more willing to group counties together, happy to initialize more clusters. 
 
 # Discussion
 
-Because this study seeks to both A) Reproduce Chakraborty's work, assessing for validity and B) use our own methodology to recreate clustering done in an external program, analysis will be split into two sections. 
-The first will explore the correlation between disability rate at the county scale and incidence - if there is a realtionship between the disability subcategories and covid incidence like Chakraborty found, we should return significant r values.
-The second section will compare our finished clusters to Chakraborty's before thinking about why any differences might occur, given that we're using a different program to generate our clusters than he did. I'm not expecting that the clusters will turn out exactly the same, so it'll be interesting to intterogate why any differences arise. 
+Because this study seeks to both A) Reproduce the first part of Chakraborty's work, assessing for validity and B) use our own methodology to recreate clustering done in an external program, analysis will be split into two sections. The first will explore the correlation between disability rate at the county scale and incidence - if there is a relationship between the disability subcategories and covid incidence like Chakraborty found, we should return significant r values. The second section will compare our finished clusters to Chakraborty's before thinking about why any differences might occur, given that we're using a different program to generate our clusters than he did. I'm not expecting that the clusters will turn out exactly the same, so it'll be interesting to interrogate why any differences arise. 
+
+
+### Disability Correlation
+
+
+Agreement was found between our mapped disability data and Chakraborty’s Figure one, producing results without discernible differences. Summary statistics told a relatively similar story, with slight differences, likely in rounding, that reflected minorly different methodology. Specifically, it appeared that Chakraborty rounded Covid cases to the nearest whole person, a step I neglected to stay true to the data. 
+
+After performing Pearson’s correlation on the variables in the data, following Chakraborty’s methods, I subtracted resulting significance values from those presented in the corresponding table in the original paper, which was loaded for comparison. They are mostly identical with similar significance thresholds, but slightly different actual values. This could be attributable to the difference in rounding methodology. The only variable that changed significance threshold was pct_18_34, which changed from significance value 1 to value 2.
+
+Testing the correlation between values using a  bivariate nonparametric correlation test (Spearman’s rho) analysis to assess the validity of Chakraborty’s parametric test used even though the dataset wasn’t normally distributed revealed that several significance values changed, with native_pct and other_pct gaining significance and pct_18_34 being reassigned to a lower (1 star) significance level. 
+
+All in all, this section of the reproduction was a huge success. Despite the rounding issues we were, for the most part able to reproduce Chakraborty’s results, fuifuilling our first goal of reproducing his workflow in open source code. We were also able to add to the analysis by including a test for normality and due to the non-normal distribution of data perform a non-parametric correlation test. This test produced some different results than Chakraborty’s original analysis, deepening the degree of analysis. 
+
+
+### Clustering 
+
+
+Implementation of the Kulldorff spatial scan statistic in the spatialepi package instead of SATSCAN was less successful. Clusters were successfully pulled from the data but they did not match the size and number of clusters from the original manuscript. We found more clusters (133 vs 102) and larger clusters (599 vs 255), calling into question the applicability of this package to reproduce the clustering operation of SATSCAN. That being said, the clusters produced do appear to be sensible given the underlying data, so this is likely reflective of a difference in software application instead of an incorrect application of the package. 
+
 
 
 # Integrity Statement
